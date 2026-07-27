@@ -625,7 +625,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Complete 10-Stop Tour Dataset
+    // Complete Renumbered 10-Stop Tour Dataset
     const tourStops = [
       {
         badge: "STOP 1",
@@ -668,6 +668,19 @@
       },
       {
         badge: "STOP 4",
+        title: "Church at the Park's Village of Hope (Micro-Shelter Communities)",
+        tagline: "Low-barrier micro-sheltering, trauma-informed relational care, and lived-experience leadership.",
+        photos: [],
+        lat: 44.9405, lng: -123.0188, // Corrected coordinates for 1280 Center St NE
+        narrative: "Church at the Park (C@P) originated in 2007 as a grassroots movement providing meals and community support in Cascades Gateway Park. To understand Salem's homelessness crisis, one must trace state institutional history: until 1980, Oregon state law mandated that all state human service agencies and mental hospital services be located in Salem. In response to unsheltered homelessness, C@P partnered with the City of Salem to pioneer low-barrier Micro-Shelter Communities.",
+        civicConnection: "The Village of Hope reframes housing as a fundamental prerequisite for human dignity rather than an earned privilege. Operating with a low-barrier model requiring no income or drug testing, Church at the Park creates immediate safety and actively hires staff with lived experience of homelessness.",
+        actionOpportunity: "• Meal Preparation & Food Service: Volunteer individually or with a student group to prepare and serve warm meals for micro-shelter guests.\n• Drive & Supply Donations: Organize campus supply drives for essential items (socks, cold-weather clothing, hygiene products, pet food).",
+        reflectionPrompts: "1. How does a 'low-barrier' shelter model reframe housing and safety as essential human rights?\n2. How does hiring leaders with lived experience challenge conventional power dynamics in social services?\n3. How do local municipal decisions regarding shelter siting impact unhoused community members?",
+        specialResearch: "Institutional Mandates & Peer Workforce: Structural Oregon statutory policies concentrated complex social service needs in Salem. C@P transforms lived expertise into professional leadership by employing individuals with lived experience of unsheltered homelessness as peer navigators.",
+        audio: { tagline: "audio/stop10-tagline.m4a", narrative: "audio/stop10-narrative.m4a", civic: "audio/stop10-civic.m4a", action: "audio/stop10-action.m4a" }
+      },
+      {
+        badge: "STOP 5",
         title: "The Oregon State Capitol",
         tagline: "Bridging direct community service with state-level structural advocacy.",
         photos: [],
@@ -680,7 +693,7 @@
         audio: { tagline: "audio/stop4-tagline.m4a", narrative: "audio/stop4-narrative.m4a", civic: "audio/stop4-civic.m4a", action: "audio/stop4-action.m4a" }
       },
       {
-        badge: "STOP 5",
+        badge: "STOP 6",
         title: "First United Methodist Church Salem (Sanctuary & Inclusive Witness)",
         tagline: "Early racial sanctuary, Civil Rights era legislative advocacy, and explicit LGBTQ+ affirming ministry.",
         photos: ["5_1.jpg", "5_2.jpg"],
@@ -693,7 +706,7 @@
         audio: { tagline: "audio/stop5-tagline.m4a", narrative: "audio/stop5-narrative.m4a", civic: "audio/stop5-civic.m4a", action: "audio/stop5-action.m4a" }
       },
       {
-        badge: "STOP 6",
+        badge: "STOP 7",
         title: "First Presbyterian Church Salem (Poor People's Campaign & Anti-Racist Witness)",
         tagline: "Historical community welfare, Civil Rights activism, and modern anti-racist organizing.",
         photos: [],
@@ -706,7 +719,7 @@
         audio: { tagline: "audio/stop6-tagline.m4a", narrative: "audio/stop6-narrative.m4a", civic: "audio/stop6-civic.m4a", action: "audio/stop6-action.m4a" }
       },
       {
-        badge: "STOP 7",
+        badge: "STOP 8",
         title: "The Ike Box & Braver Angels Forum",
         tagline: "Monthly 'Coffee Talks' bridging political polarization at a historic youth-training café.",
         photos: [],
@@ -719,7 +732,7 @@
         audio: { tagline: "audio/stop7-tagline.m4a", narrative: "audio/stop7-narrative.m4a", civic: "audio/stop7-civic.m4a", action: "audio/stop7-action.m4a" }
       },
       {
-        badge: "STOP 8",
+        badge: "STOP 9",
         title: "Salem's Former Chinatown (Historical Erasure & Public Archaeology)",
         tagline: "Confronting systemic erasure, public archaeology, and reclaiming Salem's Chinese-American history.",
         photos: [],
@@ -732,7 +745,7 @@
         audio: { tagline: "audio/stop8-tagline.m4a", narrative: "audio/stop8-narrative.m4a", civic: "audio/stop8-civic.m4a", action: "audio/stop8-action.m4a" }
       },
       {
-        badge: "STOP 9",
+        badge: "STOP 10",
         title: "Charles Maxwell's Resistance (KKK Threat Site)",
         tagline: "Honoring a Black merchant who courageously stood his ground against KKK intimidation in 1922.",
         photos: [],
@@ -743,19 +756,6 @@
         reflectionPrompts: "1. How does Charles Maxwell's choice to publish the Klan's threat demonstrate the power of public truth-telling?\n2. How did the 1920s KKK use municipal governance to enforce racial hierarchy, and where do we see similar tactics today?\n3. Why are city council elections so crucial in shaping social justice?",
         specialResearch: "Electoral Strategy & Family Legacy: By 1922, the Salem KKK grew to over 300 members, leveraging widespread white voter support to elect Klan allies to the city council. Charles Maxwell's courage lived on through his daughter Maxine Maxwell's historic anti-segregation activism in 1929.",
         audio: { tagline: "audio/stop9-tagline.m4a", narrative: "audio/stop9-narrative.m4a", civic: "audio/stop9-civic.m4a", action: "audio/stop9-action.m4a" }
-      },
-      {
-        badge: "STOP 10",
-        title: "Church at the Park's Village of Hope (Micro-Shelter Communities)",
-        tagline: "Low-barrier micro-sheltering, trauma-informed relational care, and lived-experience leadership.",
-        photos: [],
-        lat: 44.9398, lng: -123.0232, // Location: 1280 Center St NE, Salem, OR 97301
-        narrative: "Church at the Park (C@P) originated in 2007 as a grassroots movement providing meals and community support in Cascades Gateway Park. To understand Salem's homelessness crisis, one must trace state institutional history: until 1980, Oregon state law mandated that all state human service agencies and mental hospital services be located in Salem. In response to unsheltered homelessness, C@P partnered with the City of Salem to pioneer low-barrier Micro-Shelter Communities.",
-        civicConnection: "The Village of Hope reframes housing as a fundamental prerequisite for human dignity rather than an earned privilege. Operating with a low-barrier model requiring no income or drug testing, Church at the Park creates immediate safety and actively hires staff with lived experience of homelessness.",
-        actionOpportunity: "• Meal Preparation & Food Service: Volunteer individually or with a student group to prepare and serve warm meals for micro-shelter guests.\n• Drive & Supply Donations: Organize campus supply drives for essential items (socks, cold-weather clothing, hygiene products, pet food).",
-        reflectionPrompts: "1. How does a 'low-barrier' shelter model reframe housing and safety as essential human rights?\n2. How does hiring leaders with lived experience challenge conventional power dynamics in social services?\n3. How do local municipal decisions regarding shelter siting impact unhoused community members?",
-        specialResearch: "Institutional Mandates & Peer Workforce: Structural Oregon statutory policies concentrated complex social service needs in Salem. C@P transforms lived expertise into professional leadership by employing individuals with lived experience of unsheltered homelessness as peer navigators.",
-        audio: { tagline: "audio/stop10-tagline.m4a", narrative: "audio/stop10-narrative.m4a", civic: "audio/stop10-civic.m4a", action: "audio/stop10-action.m4a" }
       }
     ];
 
