@@ -3,72 +3,970 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tour Directions</title>
+  <title>Through Time and Place: Walking with our Salem Community | Willamette University</title>
+  
+  <!-- Leaflet CSS for interactive mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Willamette Brand Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,600;0,700;1,400&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    .btn-directions {
+    :root {
+      --wu-navy: #003B5C;
+      --wu-navy-dark: #002238;
+      --wu-red: #9C0221;
+      --wu-gold: #F19C49;
+      --wu-gold-bright: #FFB366;
+      --wu-muted: #6C757D;
+      --wu-light-bg: #F8F9FA;
+      
+      --font-display: 'Oswald', sans-serif;
+      --font-serif: 'Crimson Text', serif;
+      --font-body: 'Montserrat', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: #EAECEE;
+      color: #2B2D42;
+      line-height: 1.6;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Full-height map background */
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    /* Locked Top Header */
+    header {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, rgba(0, 59, 92, 0.95) 0%, rgba(0, 34, 56, 0.98) 100%);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border-bottom: 3px solid var(--wu-gold);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      z-index: 3000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .header-titles h1 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      line-height: 1.25;
+      color: #FFFFFF;
+    }
+
+    header .header-titles p {
+      font-size: 0.72rem;
+      color: var(--wu-gold-bright);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .wu-brand-tag {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 20px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #ffffff;
-      background-color: #1a73e8;
-      border: none;
-      border-radius: 24px;
+      gap: 6px;
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      background: rgba(156, 2, 33, 0.75);
+      padding: 3px 10px 3px 6px;
+      border-radius: 20px;
+      border: 1px solid rgba(241, 156, 73, 0.5);
+      margin-bottom: 4px;
+    }
+
+    .wu-brand-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--wu-gold);
+      color: var(--wu-navy);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 10px;
+    }
+
+    .wu-brand-tag span {
+      color: var(--wu-gold-bright);
+      font-weight: 700;
+    }
+
+    .stop-selector {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      font-family: var(--font-body);
+      outline: none;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      max-width: 150px;
     }
 
-    .btn-directions:hover {
-      background-color: #1557b0;
+    .stop-selector option {
+      background: #003B5C;
+      color: white;
     }
 
-    .btn-directions:active {
+    /* Pop-up Bottom Sheet Drawer */
+    .content-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      height: 68vh;
+      max-height: calc(100vh - 110px);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 28px rgba(0,0,0,0.25);
+      z-index: 2000;
+      overflow-y: auto;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      transform: translateY(105%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .content-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      background: #CBD5E1;
+      border-radius: 3px;
+      margin: 10px auto 14px auto;
+      cursor: pointer;
+    }
+
+    .sheet-body {
+      padding: 0 18px 80px 18px;
+    }
+
+    .stop-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+      gap: 10px;
+    }
+
+    .stop-badge {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      color: var(--wu-red);
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: block;
+    }
+
+    /* Google Maps Walking Directions Link */
+    .directions-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #E0F2FE;
+      color: #0369A1;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 14px;
+      text-decoration: none;
+      border: 1px solid #BAE6FD;
+      transition: background 0.2s;
+    }
+
+    .directions-btn:hover {
+      background: #BAE6FD;
+    }
+
+    .stop-title {
+      font-family: var(--font-serif);
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--wu-navy);
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+
+    .gallery-container {
+      position: relative;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #1E293B;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .gallery-slide {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+
+    .gallery-counter {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: rgba(0,0,0,0.65);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .gallery-controls {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .gallery-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .gallery-dot.active {
+      background: var(--wu-gold);
+      transform: scale(1.3);
+    }
+
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 10;
+    }
+
+    .gallery-arrow.prev { left: 8px; }
+    .gallery-arrow.next { right: 8px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+      color: var(--wu-navy);
+      text-transform: uppercase;
+    }
+
+    .audio-controls-spatial {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-audio-spatial {
+      background: linear-gradient(145deg, var(--wu-gold-bright) 0%, var(--wu-gold) 100%);
+      color: var(--wu-navy);
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(241, 156, 73, 0.4);
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-audio-spatial:active {
+      transform: scale(0.92);
+    }
+
+    .section-content {
+      font-size: 0.92rem;
+      color: #2B2D42;
+      white-space: pre-line;
+    }
+
+    .section-content a, .callout-box a {
+      color: var(--wu-navy);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .section-content a:hover, .callout-box a:hover {
+      color: var(--wu-red);
+    }
+
+    .callout-box {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #F8F9FA;
+      border: 1px solid #E2E8F0;
+    }
+
+    .callout-box.research {
+      border-left: 4px solid var(--wu-navy);
+      background: #F0F4F8;
+    }
+
+    .callout-box.prompts {
+      border-left: 4px solid var(--wu-red);
+      background: #FFF5F5;
+    }
+
+    .callout-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .research .callout-title { color: var(--wu-navy); }
+    .prompts .callout-title { color: var(--wu-red); }
+
+    .drawer-nav-bar {
+      position: sticky;
+      bottom: -24px;
+      left: -18px;
+      right: -18px;
+      margin: 24px -18px -24px -18px;
+      background: #FFFFFF;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      border-top: 1px solid #EAECEE;
+    }
+
+    .nav-btn {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .nav-btn:active {
       transform: scale(0.98);
+    }
+
+    .nav-btn-close {
+      background: var(--wu-gold);
+      color: var(--wu-navy);
+      font-weight: 700;
+      flex: 1.2;
+    }
+
+    .nav-btn-step {
+      background: var(--wu-navy);
+      color: #FFFFFF;
+      flex: 1;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Map Marker Pins */
+    .custom-map-pin {
+      background-color: var(--wu-navy);
+      color: white;
+      border: 2px solid var(--wu-gold);
+      border-radius: 50%;
+      width: 32px !important;
+      height: 32px !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .custom-map-pin.active {
+      background-color: var(--wu-red);
+      border-color: white;
+      transform: scale(1.25);
     }
   </style>
 </head>
 <body>
 
-  <!-- Updated Button -->
-  <button id="nextStopBtn" class="btn-directions">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
-    </svg>
-    Directions to Next Stop
-  </button>
+  <!-- Locked Header Overlay -->
+  <header>
+    <div class="header-titles">
+      <div class="wu-brand-tag">
+        <div class="wu-brand-icon">W</div>
+        <span>WILLAMETTE</span> UNIVERSITY
+      </div>
+      <h1>Through Time and Place: Walking with our Salem Community</h1>
+      <p>Learning Salem's History and Shaping Its Future</p>
+    </div>
+    <select id="stop-selector" class="stop-selector" onchange="onSelectStopChange(this)">
+      <option value="">Jump to Stop...</option>
+      <!-- Populated via JS -->
+    </select>
+  </header>
+
+  <!-- Full-Screen Main Map -->
+  <div id="map"></div>
+
+  <!-- Pop-Up Drawer Sheet -->
+  <div class="content-sheet" id="content-sheet">
+    <div class="sheet-handle" onclick="toggleDrawer()"></div>
+    <div class="sheet-body">
+      
+      <div class="stop-header-bar">
+        <span class="stop-badge" id="stop-badge">STOP 1</span>
+        <!-- Google Maps Walking Directions Link -->
+        <a id="help-directions-link" href="#" target="_blank" rel="noopener noreferrer" class="directions-btn">
+          📍 Directions to Stop
+        </a>
+      </div>
+
+      <h2 id="stop-title" class="stop-title"></h2>
+
+      <div class="section-header" style="margin-top: 4px; margin-bottom: 14px;">
+        <div class="audio-controls-spatial" id="controls-tagline">
+          <button class="btn-audio-spatial play" onclick="playClip('tagline')" aria-label="Play tagline audio">▶</button>
+          <button class="btn-audio-spatial pause" onclick="pauseClip()" style="display: none;" aria-label="Pause tagline audio">⏸</button>
+        </div>
+        <p id="stop-tagline" class="section-content" style="font-style: italic; color: #4A5568; font-weight: 600;"></p>
+      </div>
+
+      <div id="gallery-container" class="gallery-container" style="display: none;">
+        <img id="gallery-image" class="gallery-slide" src="" alt="Stop photo" onclick="changePhoto(1)" title="Click to view next image" onerror="handleImageError(this)">
+        <div id="gallery-counter" class="gallery-counter" style="display: none;">1 / 1</div>
+        <button id="gallery-prev" class="gallery-arrow prev" onclick="changePhoto(-1)">&#10094;</button>
+        <button id="gallery-next" class="gallery-arrow next" onclick="changePhoto(1)">&#10095;</button>
+        <div id="gallery-dots" class="gallery-controls"></div>
+      </div>
+
+      <!-- Historical Narrative Section -->
+      <div class="section-header">
+        <div class="audio-controls-spatial" id="controls-narrative">
+          <button class="btn-audio-spatial play" onclick="playClip('narrative')" aria-label="Play narrative audio">▶</button>
+          <button class="btn-audio-spatial pause" onclick="pauseClip()" style="display: none;" aria-label="Pause narrative audio">⏸</button>
+        </div>
+        <div class="section-title">Historical Narrative</div>
+      </div>
+      <p id="stop-narrative" class="section-content"></p>
+
+      <!-- Civic Connection Section -->
+      <div class="section-header">
+        <div class="audio-controls-spatial" id="controls-civic">
+          <button class="btn-audio-spatial play" onclick="playClip('civic')" aria-label="Play civic connection audio">▶</button>
+          <button class="btn-audio-spatial pause" onclick="pauseClip()" style="display: none;" aria-label="Pause civic connection audio">⏸</button>
+        </div>
+        <div class="section-title">Civic Connection</div>
+      </div>
+      <p id="stop-civic" class="section-content"></p>
+
+      <!-- Action & Volunteer Opportunity Section -->
+      <div class="section-header">
+        <div class="audio-controls-spatial" id="controls-action">
+          <button class="btn-audio-spatial play" onclick="playClip('action')" aria-label="Play action audio">▶</button>
+          <button class="btn-audio-spatial pause" onclick="pauseClip()" style="display: none;" aria-label="Pause action audio">⏸</button>
+        </div>
+        <div class="section-title">Action & Volunteer Opportunity</div>
+      </div>
+      <div id="stop-action" class="section-content"></div>
+
+      <!-- Reflection Prompts -->
+      <div id="prompts-container" class="callout-box prompts">
+        <div class="callout-title">💡 Reflection Prompts</div>
+        <div id="stop-prompts" class="section-content"></div>
+      </div>
+
+      <!-- Special Research Feature -->
+      <div id="research-container" class="callout-box research">
+        <div class="callout-title">🔍 Special Research Feature</div>
+        <div id="stop-research" class="section-content"></div>
+      </div>
+
+      <!-- Drawer Bottom Navigation Controls -->
+      <div class="drawer-nav-bar">
+        <button id="btn-prev" class="nav-btn nav-btn-step" onclick="navigateStop(-1)">
+          &#8592; Prev
+        </button>
+        <button class="nav-btn nav-btn-close" onclick="closeDrawer()">
+          🗺️ Back to Map
+        </button>
+        <button id="btn-next" class="nav-btn nav-btn-step" onclick="navigateStop(1)">
+          Next &#8594;
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Leaflet Map Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Define your next stop destination (Coordinates or Street Address)
-    const nextStop = {
-      // Option A: Use Latitude & Longitude (Most Precise)
-      lat: 37.774929,
-      lng: -122.419416,
-      
-      // Option B: Address string (fallback if not using coordinates)
-      address: "1355 Market St, San Francisco, CA"
+    // Complete Renumbered 10-Stop Tour Dataset
+    const tourStops = [
+      {
+        badge: "STOP 1",
+        title: "Willamette University Office of Civic Engagement",
+        tagline: "The basecamp for student-led community action and service-learning.",
+        photos: ["1_1.jpg"],
+        lat: 44.935309, lng: -123.031968,
+        narrative: "Willamette's Office of Civic Engagement (OCE) is built on an asset-based community development model. Located in the heart of campus inside the University Center (UC), the OCE works closely with direct-action partners, public education coalitions, and justice focused networks in the mid-Willamette Valley. It serves as our starting point, centering student action around mutual aid, critical reflection, and justice-oriented service.",
+        civicConnection: "Civic engagement is an active, sustained commitment to community well-being. Through our partnerships, we center community-defined goals by sharing our time, skills, and resources when invited rather than imposing outside solutions. We empower students to build authentic connections across diverse life experiences, reflect on structural inequality, and approach differing perspectives with curiosity.",
+        actionOpportunity: "• Connect via Social Media: Follow the <a href=\"https://www.instagram.com/civicengagementwu/\" target=\"_blank\" rel=\"noopener noreferrer\">Office of Civic Engagement on Instagram</a> to stay updated on upcoming service projects, community events, and mutual aid drives.\n• Book a 1-on-1 with a Catalyst: Schedule an appointment with a Catalyst—a trained student leader in the OCE who can help match you with existing campus-based mutual aid projects or local Salem non-profit partners.\n• Bring Your Passion: If you are passionate about a specific cause or issue where we don't currently have an active project, a Catalyst will support you in finding local opportunities.\n• Voter Registration & Free Ballot Notarization: You can choose to register to vote locally in Oregon or maintain your home address. To register in Oregon, visit the Oregon Secretary of State's website. If you choose to maintain your home address but want to receive an absentee ballot on campus, check your home state's Secretary of State website or the League of Women Voters website for guidance.",
+        reflectionPrompts: "1. How do we transition from 'doing for' the community to 'working with' community partners?\n2. What visual signs of power or neglect do you notice around the physical campus boundaries?",
+        specialResearch: "Asset-Based Community Development (ABCD) Framework: The OCE operates on the principle that every community possesses innate strengths, historical knowledge, and capacity for self-determination. Rather than treating local neighborhoods as places of deficit, student partners are trained to identify and support existing community assets.",
+        audio: { tagline: "audio/stop1-tagline.m4a", narrative: "audio/stop1-narrative.m4a", civic: "audio/stop1-civic.m4a", action: "audio/stop1-action.m4a" }
+      },
+      {
+        badge: "STOP 2",
+        title: "Bush's Pasture Park (Deep History & Land Use)",
+        tagline: "Exploring elite wealth, systemic land acquisition, and public spaces.",
+        photos: ["2_1.jpg", "2_2.jpg", "2_3.jpg"],
+        lat: 44.9288, lng: -123.0345,
+        narrative: "Bush's Pasture Park is a beautiful 90-acre park, but its legacy is deeply tied to Asahel Bush II, who held an extraordinary monopoly over 19th-century Oregon's economy, media, and state government. Bush co-founded Ladd & Bush Bank and established the Oregon Statesman. Controlling the official state printing contract gave him exclusive authority over legal notices and political ballots. Along with the 'Salem Clique' of Oregon Democrats, Bush used his media empire to champion Black exclusion laws and enforce white supremacy.",
+        civicConnection: "The park presents an underlying tension between a beautiful public recreation space and a legacy of historically restricted wealth and institutional power. Recognizing whose land this historically was—the Kalapuya people—and who controlled its development is essential for truthful engagement with local ecology and spatial justice.",
+        actionOpportunity: "• Semester & Summer Internships: Formal volunteer and docent internships with the Bush House Museum and Salem Art Association.\n• Attend Social Justice Programming: Follow Bush House Museum and Salem Art Association for Heritage Talks, ReEnvisioned Exhibitions, and Servants' Quarters Exhibits.\n• Ecology Work Parties: Join hands-on park restoration work parties hosted by the Salem Parks Foundation.",
+        reflectionPrompts: "1. How does physical space and natural beauty mask historical legacies of exclusion or colonization?\n2. How can environmental and park volunteering actively incorporate racial justice truth-telling?",
+        specialResearch: "Re-Imagining Bush House & The 1863 Salem Scandal: As part of an ongoing 'Re-Imagining Process' led by the Salem Art Association and Bush House Museum in partnership with Oregon Black Pioneers, historic spaces like the Servants' Quarters and Jeremy Okai Davis's 'ReEnvisioned' portrait series honor early Black pioneers historically omitted from public memory.",
+        audio: { tagline: "audio/stop2-tagline.m4a", narrative: "audio/stop2-narrative.m4a", civic: "audio/stop2-civic.m4a", action: "audio/stop2-action.m4a" }
+      },
+      {
+        badge: "STOP 3",
+        title: "Bush Elementary School & The Tiger Club Program",
+        tagline: "The heartbeat of WU's youth mentoring, educational justice, and college access partnerships.",
+        photos: [],
+        lat: 44.9268, lng: -123.0332,
+        narrative: "Bush Elementary School represents a profound paradox in Salem's landscape. Named after Asahel Bush II—the publisher and politician who actively fought against racial equality—the school today serves a vibrant community where over 70% of students are students of color. As neighborhood demographics evolved, local schools became central sites for equitable support.",
+        civicConnection: "Supported heavily by the OCE, the Willamette Tiger Club connects university students with elementary school children to provide enrichment, academic support, and mentorship. In public education, access to creative enrichment is often heavily dictated by neighborhood wealth and property tax funding structures. Providing free, high-quality enrichment is an act of educational justice.",
+        actionOpportunity: "• Mentor with Willamette Tiger Club: Commit twice a week to build relational stability, provide academic enrichment, and serve as college-going role models. Get started early by completing the Salem-Keizer School District background check via the OCE.",
+        reflectionPrompts: "1. How does educational inequality reflect wider community segregation and systemic disinvestment?\n2. How can no-cost enrichment programs like Tiger Club help dismantle systemic resource gaps in public schools?\n3. How does near-peer mentorship reshape an elementary student's self-perception regarding higher education?",
+        specialResearch: "School Demographic Profile & Spatial Paradox: Bush Elementary serves a uniquely diverse student body (~58% Hispanic/Latino, ~27% White, ~8% Multiracial, ~6% Native Hawaiian/Pacific Islander, alongside Asian, Black, and Indigenous students). Over 60% experience socioeconomic poverty, and almost half are English Language Learners.",
+        audio: { tagline: "audio/stop3-tagline.m4a", narrative: "audio/stop3-narrative.m4a", civic: "audio/stop3-civic.m4a", action: "audio/stop3-action.m4a" }
+      },
+      {
+        badge: "STOP 4",
+        title: "Church at the Park's Village of Hope (Micro-Shelter Communities)",
+        tagline: "Low-barrier micro-sheltering, trauma-informed relational care, and lived-experience leadership.",
+        photos: [],
+        lat: 44.9405, lng: -123.0188,
+        narrative: "Church at the Park (C@P) originated in 2007 as a grassroots movement providing meals and community support in Cascades Gateway Park. To understand Salem's homelessness crisis, one must trace state institutional history: until 1980, Oregon state law mandated that all state human service agencies and mental hospital services be located in Salem. In response to unsheltered homelessness, C@P partnered with the City of Salem to pioneer low-barrier Micro-Shelter Communities.",
+        civicConnection: "The Village of Hope reframes housing as a fundamental prerequisite for human dignity rather than an earned privilege. Operating with a low-barrier model requiring no income or drug testing, Church at the Park creates immediate safety and actively hires staff with lived experience of homelessness.",
+        actionOpportunity: "• Meal Preparation & Food Service: Volunteer individually or with a student group to prepare and serve warm meals for micro-shelter guests.\n• Drive & Supply Donations: Organize campus supply drives for essential items (socks, cold-weather clothing, hygiene products, pet food).",
+        reflectionPrompts: "1. How does a 'low-barrier' shelter model reframe housing and safety as essential human rights?\n2. How does hiring leaders with lived experience challenge conventional power dynamics in social services?\n3. How do local municipal decisions regarding shelter siting impact unhoused community members?",
+        specialResearch: "Institutional Mandates & Peer Workforce: Structural Oregon statutory policies concentrated complex social service needs in Salem. C@P transforms lived expertise into professional leadership by employing individuals with lived experience of unsheltered homelessness as peer navigators.",
+        audio: { tagline: "audio/stop4-tagline.m4a", narrative: "audio/stop4-narrative.m4a", civic: "audio/stop4-civic.m4a", action: "audio/stop4-action.m4a" }
+      },
+      {
+        badge: "STOP 5",
+        title: "The Oregon State Capitol",
+        tagline: "Bridging direct community service with state-level structural advocacy.",
+        photos: [],
+        lat: 44.9382, lng: -123.0304,
+        narrative: "Constructed on occupied Kalapuya lands, the current Oregon State Capitol (built 1936–1938) is topped by the gold-leafed bronze 'Oregon Pioneer' statue facing westward. Positioned directly across State Street from Willamette's campus, this towering monument invites us to question whose history is being privileged—and whose erased—in our shared civic space. Beneath previous statehouse roofs, early leaders codified racial exclusion in the 1859 Oregon Constitution.",
+        civicConnection: "Standing before the Capitol challenges us to connect direct service with policy advocacy. Proximity offers Willamette students a front-row seat to civic life—from rallies on the Capitol steps and community Legislative Days to live committee testimony and legislative internships.",
+        actionOpportunity: "• Partner with Advocacy Coalitions: Join non-profits leading statewide policy campaigns.\n• Engage via OLIS: Submit online written or live oral testimony on active legislative bills.\n• Legislative Internships: Apply for legislative internships during Long Sessions (odd years) or Short Sessions (even years).",
+        reflectionPrompts: "1. Looking up at the 'Golden Man' atop the dome, what message is conveyed about Oregon's identity?\n2. How do public demonstrations on the Capitol steps complement or contrast with direct legislative advocacy?\n3. How does the fact that constitutional exclusions were maintained and repealed directly by public voters shape your understanding of civic responsibility?",
+        specialResearch: "Historical Timeline of Constitutional Exclusion: 1859 Oregon Constitution enacted explicit Black exclusion and Chinese property bans. Oregon voters repealed Black exclusion in 1926 (Measure 3) and Chinese property restrictions in 1946 (Measure 306-307), with all remaining obsolete language cleaned up in 2002 (Measure 14).",
+        audio: { tagline: "audio/stop5-tagline.m4a", narrative: "audio/stop5-narrative.m4a", civic: "audio/stop5-civic.m4a", action: "audio/stop5-action.m4a" }
+      },
+      {
+        badge: "STOP 6",
+        title: "First United Methodist Church Salem (Sanctuary & Inclusive Witness)",
+        tagline: "Early racial sanctuary, Civil Rights era legislative advocacy, and explicit LGBTQ+ affirming ministry.",
+        photos: ["6_1.jpg", "6_2.jpg"],
+        lat: 44.9372, lng: -123.0321,
+        narrative: "Located directly across from campus and the Capitol, First United Methodist Church (FUMC) has a long history of defying exclusionary social hierarchies. In the early 1900s, FUMC integrated Black residents during the height of Oregon's KKK presence. In December 2009, FUMC voted to officially become a 'Reconciling Congregation', explicitly welcoming and celebrating LGBTQ+ individuals in direct opposition to discriminatory denominational stances.",
+        civicConnection: "Civic engagement calls us to examine how institutions move beyond passive welcome into active sanctuary, political solidarity, and moral conviction. FUMC demonstrates how institutions can leverage their physical presence and social capital to protect marginalized communities—even when doing so carries institutional cost.",
+        actionOpportunity: "• Rainbow Youth: Volunteer with Rainbow Youth to provide safe, affirming spaces for LGBTQIA+ youth.\n• Punx with Purpose: Support mutual aid distribution, drop-in centers, and harm reduction initiatives.\n• Attend Services: Join Sunday worship services at 9:30 AM or 11:00 AM.",
+        reflectionPrompts: "1. What does it mean for an institution to choose inclusion when doing so results in losing members or resources?\n2. How does flying a Progress Pride flag directly across from the State Capitol serve as both pastoral sanctuary and political statement?",
+        specialResearch: "Archival Records of Solidarity: Marie Maxwell performed prominent vocal solos in the choir in 1915 and hosted piano recitals for celebrated Black composers in 1917. During the 1960s, FUMC hosted interfaith forums lobbying for Oregon's Fair Housing Act.",
+        audio: { tagline: "audio/stop6-tagline.m4a", narrative: "audio/stop6-narrative.m4a", civic: "audio/stop6-civic.m4a", action: "audio/stop6-action.m4a" }
+      },
+      {
+        badge: "STOP 7",
+        title: "First Presbyterian Church Salem (Poor People's Campaign & Anti-Racist Witness)",
+        tagline: "Historical community welfare, Civil Rights activism, and modern anti-racist organizing.",
+        photos: [],
+        lat: 44.9389, lng: -123.0335,
+        narrative: "Founded in 1869, First Presbyterian Church (FPC) counteracted 19th-century exclusionary legal barriers by providing social services and community welfare that bypassed official state discrimination. During the 1950s and 1960s Civil Rights Movement, FPC joined ecumenical councils lobbying for fair housing and supported Dr. Martin Luther King Jr.’s 1968 Poor People’s Campaign. Today, it hosts Salem's chapter of the Poor People's Campaign.",
+        civicConnection: "By linking racial justice directly with economic defense and housing security, FPC models how faith communities can serve as incubators for systemic equity and community coalition building.",
+        actionOpportunity: "• Poor People's Campaign: Participate in statewide poverty hearings and moral fusion marches.\n• Community Meal Programs: Volunteer with FPC's weekly food ministry and community pantry.\n• Inter-faith Justice Dialogues: Attend community education series on anti-racism and housing equity.",
+        reflectionPrompts: "1. How can faith communities and secular non-profits build effective coalitions to address systemic poverty?\n2. What role does physical sanctuary play in protecting vulnerable workers and families?",
+        specialResearch: "Poor People's Campaign & Moral Fusion Organizing: FPC continues Dr. King's legacy by mobilizing low-wealth residents and moral leaders across Oregon to advocate for living wages, voting rights, and healthcare access.",
+        audio: { tagline: "audio/stop7-tagline.m4a", narrative: "audio/stop7-narrative.m4a", civic: "audio/stop7-civic.m4a", action: "audio/stop7-action.m4a" }
+      },
+      {
+        badge: "STOP 8",
+        title: "State Street & Hollywood District (Charles Maxwell & Family)",
+        tagline: "Courageous resistance against KKK terrorism, Black entrepreneurship, and civil rights legacy.",
+        photos: [],
+        lat: 44.9402, lng: -123.0278,
+        narrative: "During the 1920s, the Ku Klux Klan held immense political power in Oregon. Charles Maxwell, a Black business owner who ran a shoeshine shop on State Street, received a threatening letter signed 'KKK' over a skull and crossbones demanding he leave Salem. Refusing to be intimidated, Maxwell published the letter publicly and remained in Salem, later opening the successful Fat Boy Barbecue in the Hollywood District in 1928. Despite facing ongoing racism—including his daughter Maxine being denied housing at OSU—the Maxwell family's resilience remains a pillar of Salem's civil rights history.",
+        civicConnection: "Maxwell's defiance illustrates the power of public truth-telling against racial terror and economic marginalization. Honoring his legacy demands confronting ongoing racial disparities and supporting Black-owned businesses and community leaders today.",
+        actionOpportunity: "• Support Local Black-Owned Businesses: Patronize local BIPOC entrepreneurs and community enterprises in Salem.\n• Engage with Oregon Black Pioneers: Visit exhibitions and educational events hosted by Oregon Black Pioneers (<a href=\"https://oregonblackpioneers.org/\" target=\"_blank\" rel=\"noopener noreferrer\">oregonblackpioneers.org</a>).\n• Support Student Diversity Organizations: Connect with Willamette's Black Student Union (BSU) and Multicultural Student Union (MSU).",
+        reflectionPrompts: "1. How did Charles Maxwell's decision to publish the KKK threat turn a private terror tactic into a public act of resistance?\n2. How do historical barriers to housing and business capital continue to shape generational wealth in Oregon?",
+        specialResearch: "Oregon Black Pioneers Archival Findings: Archival research confirms Charles Maxwell's entrepreneurial leadership in Salem's commercial core despite state Exclusion Laws and Klan intimidation in the 1920s.",
+        audio: { tagline: "audio/stop8-tagline.m4a", narrative: "audio/stop8-narrative.m4a", civic: "audio/stop8-civic.m4a", action: "audio/stop8-action.m4a" }
+      },
+      {
+        badge: "STOP 9",
+        title: "Downtown Commercial District & Historic Chinatown",
+        tagline: "Early immigrant labor, urban renewal displacement, and Asian American heritage.",
+        photos: [],
+        lat: 44.9418, lng: -123.0360,
+        narrative: "In the late 19th and early 20th centuries, downtown Salem was home to a thriving Chinese immigrant community that built critical infrastructure, worked in hop fields and canneries, and established laundries, stores, and social organizations along High and Ferry Streets. Despite anti-Chinese legislation and physical arson/demolition during mid-20th century urban renewal, Salem's Chinese and Asian American pioneers laid key foundations for the region's economic growth.",
+        civicConnection: "Preserving immigrant memory amidst urban redevelopment requires intentional civic advocacy. Understanding how historic Chinatowns were systematically dismantled illuminates modern patterns of gentrification and urban displacement.",
+        actionOpportunity: "• Explore Salem's Asian Heritage Exhibits: Visit local historical society displays on Salem's Chinatown history.\n• Support Immigrant Rights Organizations: Volunteer with Causa Oregon or Mano a Mano Family Center.\n• Cultural Preservation Work: Join local historic preservation efforts advocating for historical markers and Asian American history curricula.",
+        reflectionPrompts: "1. Why are historic Chinatowns in smaller Western cities often invisible today, and how did urban planning contribute to this?\n2. How can current urban design honor hidden community histories?",
+        specialResearch: "Archaeological Excavations & Salem Chinatown History: Archaeological digs in downtown Salem uncovered artifacts confirming vibrant merchant and family life along Commercial and High Streets prior to mid-century redevelopment.",
+        audio: { tagline: "audio/stop9-tagline.m4a", narrative: "audio/stop9-narrative.m4a", civic: "audio/stop9-civic.m4a", action: "audio/stop9-action.m4a" }
+      },
+      {
+        badge: "STOP 10",
+        title: "Willamette Riverfront Park (Indigenous Kalapuya Land & Eco-Justice)",
+        tagline: "Kalapuya ancestral homelands, riverfront industrial transformation, and ecological stewardship.",
+        photos: [],
+        lat: 44.9412, lng: -123.0425,
+        narrative: "Situated along the Willamette River (Wimahl), Riverfront Park sits on the ancestral homelands of the Santiam and Tualatin bands of the Kalapuya people, who stewarded this valley for thousands of years before forced removal to the Grand Ronde and Siletz reservations under 1850s treaties. Later transformed into a heavy industrial site with paper mills, the area underwent toxic cleanup and park creation in the 1990s, restoring public river access.",
+        civicConnection: "Environmental justice ties Indigenous sovereignty, ecological restoration, and equitable access to public natural resources together. Acknowledging Kalapuya stewardship requires supporting contemporary Tribal sovereignty and participating in watershed protection.",
+        actionOpportunity: "• Support Tribal Sovereignty: Learn about and support programs of the Confederated Tribes of Grand Ronde and Confederated Tribes of Siletz Indians.\n• River Cleanups & Watershed Restoration: Volunteer with the Willamette Riverkeeper or City of Salem Parks for riverbank restoration.\n• Environmental Justice Advocacy: Engage with local climate justice groups working to protect Willamette Valley ecosystems.",
+        reflectionPrompts: "1. How does recognizing Riverfront Park as unceded Kalapuya land alter your relationship to this space?\n2. How can urban park design balance ecological restoration with honoring Indigenous history and culture?",
+        specialResearch: "Kalapuya Land Stewardship & Eco-Restoration: The Kalapuya practiced controlled burning to cultivate oak savannas and camas fields. Modern restoration efforts along the Willamette River incorporate traditional ecological knowledge (TEK) alongside scientific remediation.",
+        audio: { tagline: "audio/stop10-tagline.m4a", narrative: "audio/stop10-narrative.m4a", civic: "audio/stop10-civic.m4a", action: "audio/stop10-action.m4a" }
+      }
+    ];
+
+    let map;
+    let markers = [];
+    let currentStopIndex = -1;
+    let currentPhotoIndex = 0;
+    let currentAudio = null;
+
+    // Initialize Leaflet Map on window load
+    window.onload = function() {
+      initMap();
+      populateStopSelector();
     };
 
-    function openWalkingDirections(destination) {
-      // Encode address or pass lat,lng directly
-      const destParam = destination.lat && destination.lng 
-        ? `${destination.lat},${destination.lng}`
-        : encodeURIComponent(destination.address);
+    function initMap() {
+      // Centered around Salem / Willamette University
+      map = L.map('map', {
+        zoomControl: false
+      }).setView([44.9365, -123.0315], 14);
 
-      // Google Maps Directions API URL format
-      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destParam}&travelmode=walking`;
+      // OpenStreetMap Tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Willamette University',
+        maxZoom: 19
+      }).addTo(map);
 
-      // Open in new tab or browser app on mobile
-      window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+      // Add Zoom control at top-right
+      L.control.zoom({ position: 'topright' }).addTo(map);
+
+      // Render custom map pins for each stop
+      tourStops.forEach((stop, index) => {
+        const customIcon = L.divIcon({
+          className: 'custom-map-pin-container',
+          html: `<div class="custom-map-pin" id="pin-${index}">${index + 1}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+
+        const marker = L.marker([stop.lat, stop.lng], { icon: customIcon }).addTo(map);
+
+        marker.on('click', () => {
+          openStop(index);
+        });
+
+        markers.push(marker);
+      });
     }
 
-    // Attach click handler
-    document.getElementById('nextStopBtn').addEventListener('click', () => {
-      openWalkingDirections(nextStop);
-    });
-  </script>
+    function populateStopSelector() {
+      const selector = document.getElementById('stop-selector');
+      tourStops.forEach((stop, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${stop.badge}: ${stop.title}`;
+        selector.appendChild(opt);
+      });
+    }
 
+    function onSelectStopChange(selectElem) {
+      const idx = parseInt(selectElem.value, 10);
+      if (!isNaN(idx) && idx >= 0 && idx < tourStops.length) {
+        openStop(idx);
+      }
+    }
+
+    function openStop(index) {
+      if (index < 0 || index >= tourStops.length) return;
+      currentStopIndex = index;
+      const stop = tourStops[index];
+
+      // Update Map Pin styles
+      markers.forEach((m, i) => {
+        const el = document.getElementById(`pin-${i}`);
+        if (el) {
+          if (i === index) {
+            el.classList.add('active');
+          } else {
+            el.classList.remove('active');
+          }
+        }
+      });
+
+      // Fly map to stop position
+      map.flyTo([stop.lat, stop.lng], 16, {
+        animate: true,
+        duration: 0.8
+      });
+
+      // Populate Sheet Content
+      document.getElementById('stop-badge').textContent = stop.badge;
+      document.getElementById('stop-title').textContent = stop.title;
+      document.getElementById('stop-tagline').textContent = stop.tagline;
+      document.getElementById('stop-narrative').textContent = stop.narrative;
+      document.getElementById('stop-civic').textContent = stop.civicConnection;
+      
+      // Render Action Opportunity
+      const actionEl = document.getElementById('stop-action');
+      actionEl.innerHTML = stop.actionOpportunity.replace(/\n/g, '<br>');
+
+      // Render Reflection Prompts
+      const promptsEl = document.getElementById('stop-prompts');
+      promptsEl.innerHTML = stop.reflectionPrompts.replace(/\n/g, '<br>');
+
+      // Render Special Research
+      const researchBox = document.getElementById('research-container');
+      const researchEl = document.getElementById('stop-research');
+      if (stop.specialResearch && stop.specialResearch.trim() !== '') {
+        researchEl.innerHTML = stop.specialResearch.replace(/\n/g, '<br>');
+        researchBox.style.display = 'block';
+      } else {
+        researchBox.style.display = 'none';
+      }
+
+      // Update Directions Link
+      const dirBtn = document.getElementById('help-directions-link');
+      dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}&travelmode=walking`;
+
+      // Gallery Setup
+      setupGallery(stop.photos);
+
+      // Stop Audio
+      pauseClip();
+
+      // Update Dropdown
+      document.getElementById('stop-selector').value = index;
+
+      // Enable/Disable Nav Buttons
+      document.getElementById('btn-prev').disabled = (index === 0);
+      document.getElementById('btn-next').disabled = (index === tourStops.length - 1);
+
+      // Open Sheet
+      const sheet = document.getElementById('content-sheet');
+      sheet.classList.add('open');
+    }
+
+    function setupGallery(photos) {
+      const container = document.getElementById('gallery-container');
+      if (!photos || photos.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      currentPhotoIndex = 0;
+      updateGalleryImage(photos);
+    }
+
+    function updateGalleryImage(photos) {
+      const img = document.getElementById('gallery-image');
+      const counter = document.getElementById('gallery-counter');
+      const dotsContainer = document.getElementById('gallery-dots');
+
+      const photoSrc = photos[currentPhotoIndex] || `https://placehold.co/600x300/003B5C/FFFFFF?text=Stop+${currentStopIndex + 1}`;
+      img.src = photoSrc;
+
+      if (photos.length > 1) {
+        counter.style.display = 'block';
+        counter.textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
+        document.getElementById('gallery-prev').style.display = 'flex';
+        document.getElementById('gallery-next').style.display = 'flex';
+
+        dotsContainer.innerHTML = '';
+        photos.forEach((_, i) => {
+          const dot = document.createElement('div');
+          dot.className = `gallery-dot ${i === currentPhotoIndex ? 'active' : ''}`;
+          dot.onclick = () => {
+            currentPhotoIndex = i;
+            updateGalleryImage(photos);
+          };
+          dotsContainer.appendChild(dot);
+        });
+      } else {
+        counter.style.display = 'none';
+        document.getElementById('gallery-prev').style.display = 'none';
+        document.getElementById('gallery-next').style.display = 'none';
+        dotsContainer.innerHTML = '';
+      }
+    }
+
+    function changePhoto(direction) {
+      if (currentStopIndex < 0) return;
+      const photos = tourStops[currentStopIndex].photos;
+      if (!photos || photos.length <= 1) return;
+
+      currentPhotoIndex = (currentPhotoIndex + direction + photos.length) % photos.length;
+      updateGalleryImage(photos);
+    }
+
+    function handleImageError(img) {
+      img.src = `https://placehold.co/600x300/003B5C/F19C49?text=Walking+Tour+Stop+${currentStopIndex + 1}`;
+    }
+
+    function playClip(type) {
+      pauseClip();
+      if (currentStopIndex < 0) return;
+
+      const stop = tourStops[currentStopIndex];
+      if (stop.audio && stop.audio[type]) {
+        currentAudio = new Audio(stop.audio[type]);
+        
+        // Toggle play/pause buttons
+        const container = document.getElementById(`controls-${type}`);
+        if (container) {
+          const playBtn = container.querySelector('.play');
+          const pauseBtn = container.querySelector('.pause');
+          if (playBtn) playBtn.style.display = 'none';
+          if (pauseBtn) pauseBtn.style.display = 'inline-flex';
+        }
+
+        currentAudio.play().catch(e => {
+          console.warn("Audio file playback notification: Audio file not found at " + stop.audio[type]);
+          pauseClip();
+        });
+
+        currentAudio.onended = () => {
+          pauseClip();
+        };
+      }
+    }
+
+    function pauseClip() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      document.querySelectorAll('.audio-controls-spatial').forEach(container => {
+        const playBtn = container.querySelector('.play');
+        const pauseBtn = container.querySelector('.pause');
+        if (playBtn) playBtn.style.display = 'inline-flex';
+        if (pauseBtn) pauseBtn.style.display = 'none';
+      });
+    }
+
+    function navigateStop(direction) {
+      const targetIndex = currentStopIndex + direction;
+      if (targetIndex >= 0 && targetIndex < tourStops.length) {
+        openStop(targetIndex);
+      }
+    }
+
+    function closeDrawer() {
+      const sheet = document.getElementById('content-sheet');
+      sheet.classList.remove('open');
+      pauseClip();
+    }
+
+    function toggleDrawer() {
+      const sheet = document.getElementById('content-sheet');
+      sheet.classList.toggle('open');
+    }
+  </script>
 </body>
 </html>
